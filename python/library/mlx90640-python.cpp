@@ -26,95 +26,93 @@ static float mlx90640To[768];
 float eTa;
 // static uint16_t data[768*sizeof(float)];
 
-//extern "C" 
-int setup(int fps){
-	MLX90640_SetDeviceMode(MLX_I2C_ADDR, 0);
-	MLX90640_SetSubPageRepeat(MLX_I2C_ADDR, 0);
+//extern "C"
+int setup(int fps)
+{
+    MLX90640_SetDeviceMode(MLX_I2C_ADDR, 0);
+    MLX90640_SetSubPageRepeat(MLX_I2C_ADDR, 0);
 
-	//int t = (1000000 / fps) + OFFSET_MICROS;
+    //int t = (1000000 / fps) + OFFSET_MICROS;
 
-	switch(fps){
-		case 1:
-			MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b001);
-			baudrate = 400000;
-			break;
-		case 2:
-			MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b010);
-			baudrate = 400000;
-			break;
-		case 4:
-			MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b011);
-			baudrate = 400000;
-			break;
-		case 8:
-			MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b100);
-			baudrate = 400000;
-			break;
-		case 16:
-			MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b101);
-			baudrate = 1000000;
-			break;
-		case 32:
-			MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b110);
-			baudrate = 1000000;
-			break;
-		case 64:
-			MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b111);
-			baudrate = 1000000;
-			break;
-		default:
+    switch (fps)
+    {
+        case 1: MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b001);
+            baudrate = 400000;
+            break;
+        case 2: MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b010);
+            baudrate = 400000;
+            break;
+        case 4: MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b011);
+            baudrate = 400000;
+            break;
+        case 8: MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b100);
+            baudrate = 400000;
+            break;
+        case 16: MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b101);
+            baudrate = 1000000;
+            break;
+        case 32: MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b110);
+            baudrate = 1000000;
+            break;
+        case 64: MLX90640_SetRefreshRate(MLX_I2C_ADDR, 0b111);
+            baudrate = 1000000;
+            break;
+        default:
 #ifdef DEBUG
-			printf("Unsupported framerate: %d", fps);
+            printf("Unsupported framerate: %d", fps);
 #endif
-			return 1;
-	}
-	MLX90640_SetChessMode(MLX_I2C_ADDR);
-	MLX90640_DumpEE(MLX_I2C_ADDR, eeMLX90640);
-	MLX90640_ExtractParameters(eeMLX90640, &mlx90640);
+            return 1;
+    }
+    MLX90640_SetChessMode(MLX_I2C_ADDR);
+    MLX90640_DumpEE(MLX_I2C_ADDR, eeMLX90640);
+    MLX90640_ExtractParameters(eeMLX90640, &mlx90640);
 
-	return 0;
+    return 0;
 }
 
-//extern "C" 
-void cleanup(void){
-	//nothing...
+//extern "C"
+void cleanup(void)
+{
+    //nothing...
 }
 
-//extern "C" 
-float * get_frame(void){
-	int retries = 6;
-	int subpage;
-	bool subpages[2] = {0,0};
+//extern "C"
+float *get_frame(void)
+{
+    int retries = 6;
+    int subpage;
+    bool subpages[2] = {0, 0};
 
-	retries=10;
+    retries = 10;
 
-	while (retries-- && (!subpages[0] || !subpages[1])){
+    while (retries -- && (! subpages[0] || ! subpages[1]))
+    {
 #ifdef DEBUG
-		printf("Retries: %d \n", retries);
+        printf("Retries: %d \n", retries);
 #endif
-		//auto start = std::chrono::system_clock::now();
+        //auto start = std::chrono::system_clock::now();
 
-		MLX90640_GetFrameData(MLX_I2C_ADDR, frame);
+        MLX90640_GetFrameData(MLX_I2C_ADDR, frame);
 #ifdef DEBUG
-		printf("Got data for page %d\n", MLX90640_GetSubPageNumber(frame));
+        printf("Got data for page %d\n", MLX90640_GetSubPageNumber(frame));
 #endif
-		subpage = MLX90640_GetSubPageNumber(frame);
+        subpage = MLX90640_GetSubPageNumber(frame);
 
-		subpages[subpage] = 1;
+        subpages[subpage] = 1;
 
 #ifdef DEBUG
-		printf("Converting data for page %d\n", subpage);
-#endif
-
-		eTa = MLX90640_GetTa(frame, &mlx90640);
-		MLX90640_CalculateTo(frame, &mlx90640, emissivity, eTa, mlx90640To);
-
-		MLX90640_BadPixelsCorrection((&mlx90640)->brokenPixels, mlx90640To, 1, &mlx90640);
-		MLX90640_BadPixelsCorrection((&mlx90640)->outlierPixels, mlx90640To, 1, &mlx90640);
-	}
-#ifdef DEBUG
-	printf("Finishing\n");
+        printf("Converting data for page %d\n", subpage);
 #endif
 
-	return mlx90640To;
+        eTa = MLX90640_GetTa(frame, &mlx90640);
+        MLX90640_CalculateTo(frame, &mlx90640, emissivity, eTa, mlx90640To);
+
+        MLX90640_BadPixelsCorrection((&mlx90640)->brokenPixels, mlx90640To, 1, &mlx90640);
+        MLX90640_BadPixelsCorrection((&mlx90640)->outlierPixels, mlx90640To, 1, &mlx90640);
+    }
+#ifdef DEBUG
+    printf("Finishing\n");
+#endif
+
+    return mlx90640To;
 }

@@ -20,7 +20,8 @@
 
 #define MLX_I2C_ADDR 0x33
 
-int main(){
+int main()
+{
     int state = 0;
     printf("Starting...\n");
     static uint16_t eeMLX90640[832];
@@ -28,7 +29,7 @@ int main(){
     uint16_t frame[834];
     static float image[768];
     float eTa;
-    static uint16_t data[768*sizeof(float)];
+    static uint16_t data[768 * sizeof(float)];
 
     std::fstream fs;
 
@@ -49,15 +50,17 @@ int main(){
     static float mlx90640To[768];
 
     MLX90640_StartMeasurement(MLX_I2C_ADDR, 0);
-    while (1){
-        while (!MLX90640_CheckInterrupt(MLX_I2C_ADDR)){
+    while (1)
+    {
+        while (! MLX90640_CheckInterrupt(MLX_I2C_ADDR))
+        {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         MLX90640_GetData(MLX_I2C_ADDR, frame);
         // MLX90640_InterpolateOutliers(frame, eeMLX90640);
         subpage = MLX90640_GetSubPageNumber(frame);
         // Start the next meausrement
-        MLX90640_StartMeasurement(MLX_I2C_ADDR, !subpage);
+        MLX90640_StartMeasurement(MLX_I2C_ADDR, ! subpage);
         eTa = MLX90640_GetTa(frame, &mlx90640);
         MLX90640_CalculateTo(frame, &mlx90640, emissivity, eTa, mlx90640To);
 
@@ -66,30 +69,39 @@ int main(){
 
         printf("Subpage: %d\n", subpage);
 
-        for(int x = 0; x < 32; x++){
-            for(int y = 0; y < 24; y++){
+        for (int x = 0; x < 32; x ++)
+        {
+            for (int y = 0; y < 24; y ++)
+            {
                 //std::cout << image[32 * y + x] << ",";
-                float val = mlx90640To[32 * (23-y) + x];
+                float val = mlx90640To[32 * (23 - y) + x];
                 //if(val > 99.99) val = 99.99;
-                if(val > 32.0){
+                if (val > 32.0)
+                {
                     printf(ANSI_COLOR_MAGENTA FMT_STRING ANSI_COLOR_RESET, val);
                 }
-                else if(val > 29.0){
+                else if (val > 29.0)
+                {
                     printf(ANSI_COLOR_RED FMT_STRING ANSI_COLOR_RESET, val);
                 }
-                else if (val > 26.0){
+                else if (val > 26.0)
+                {
                     printf(ANSI_COLOR_YELLOW FMT_STRING ANSI_COLOR_YELLOW, val);
                 }
-                else if ( val > 20.0 ){
+                else if (val > 20.0)
+                {
                     printf(ANSI_COLOR_NONE FMT_STRING ANSI_COLOR_RESET, val);
                 }
-                else if (val > 17.0) {
+                else if (val > 17.0)
+                {
                     printf(ANSI_COLOR_GREEN FMT_STRING ANSI_COLOR_RESET, val);
                 }
-                else if (val > 10.0) {
+                else if (val > 10.0)
+                {
                     printf(ANSI_COLOR_CYAN FMT_STRING ANSI_COLOR_RESET, val);
                 }
-                else {
+                else
+                {
                     printf(ANSI_COLOR_BLUE FMT_STRING ANSI_COLOR_RESET, val);
                 }
             }

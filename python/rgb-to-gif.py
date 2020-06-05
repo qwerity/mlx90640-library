@@ -6,10 +6,10 @@ import argparse
 from PIL import Image
 import os
 
-MAX_FRAMES = 50           # Large sizes get big quick!
-SKIP_FRAMES = 2           # Frames to skip before starting recording
+MAX_FRAMES = 50  # Large sizes get big quick!
+SKIP_FRAMES = 2  # Frames to skip before starting recording
 OUTPUT_SIZE = (240, 320)  # Multiple of (24, 32)
-FPS = 4                   # Should match the FPS value in examples/rawrgb.cpp
+FPS = 4  # Should match the FPS value in examples/rawrgb.cpp
 RAW_RGB_PATH = "../examples/rawrgb"
 
 frames = []

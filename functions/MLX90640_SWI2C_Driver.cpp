@@ -14,17 +14,17 @@
  * limitations under the License.
  *
  */
- /**
- * As the timings depend heavily on the MCU in use, it is recommended
- * to make sure that the proper timings are achieved. For that purpose
- * an oscilloscope might be needed to strobe the SCL and SDA signals.
- * The Wait(int) function could be modified in order to better 
- * trim the frequency. For coarse setting of the frequency or 
- * dynamic frequency change using the default function implementation, 
- * ‘freqCnt’ argument should be changed – lower value results in 
- * higher frequency.
- */
- 
+/**
+* As the timings depend heavily on the MCU in use, it is recommended
+* to make sure that the proper timings are achieved. For that purpose
+* an oscilloscope might be needed to strobe the SCL and SDA signals.
+* The Wait(int) function could be modified in order to better
+* trim the frequency. For coarse setting of the frequency or
+* dynamic frequency change using the default function implementation,
+* ‘freqCnt’ argument should be changed – lower value results in
+* higher frequency.
+*/
+
 #include "mbed.h"
 #include "MLX90640_I2C_Driver.h"
 
@@ -36,99 +36,107 @@ DigitalOut scl(p10);
 #define HIGH 1;
 
 #define SCL_HIGH scl = HIGH;
-#define SCL_LOW scl = LOW;     
+#define SCL_LOW scl = LOW;
 #define SDA_HIGH sda.input();
 #define SDA_LOW sda.output(); \
-                sda = LOW;           
+                sda = LOW;
 
 int I2CSendByte(int8_t);
+
 void I2CReadBytes(int, char *);
+
 void I2CStart(void);
+
 void I2CStop(void);
+
 void I2CRepeatedStart(void);
+
 void I2CSendACK(void);
+
 void I2CSendNack(void);
+
 int I2CReceiveAck(void);
+
 void Wait(int);
 
 static int freqCnt;
 
 void MLX90640_I2CInit()
-{   
+{
     I2CStop();
 }
-    
-int MLX90640_I2CRead(uint8_t slaveAddr, uint16_t startAddress,uint16_t nMemAddressRead, uint16_t *data)
+
+int MLX90640_I2CRead(uint8_t slaveAddr, uint16_t startAddress, uint16_t nMemAddressRead, uint16_t *data)
 {
     uint8_t sa;
     int ack = 0;
     int cnt = 0;
     int i = 0;
-    char cmd[2] = {0,0};
+    char cmd[2] = {0, 0};
     char i2cData[1664] = {0};
     uint16_t *p;
-    
+
     p = data;
     sa = (slaveAddr << 1);
     cmd[0] = startAddress >> 8;
     cmd[1] = startAddress & 0x00FF;
-    
+
     I2CStop();
-    Wait(freqCnt);  
+    Wait(freqCnt);
     I2CStart();
     Wait(freqCnt);
-    
-    ack = I2CSendByte(sa)!=0;
-    if(ack != 0)
-    {
-        return -1;
-    } 
-    
-    ack = I2CSendByte(cmd[0])!=0;   
-    if(ack != 0)
-    {
-        return -1;
-    }
-    
-    ack = I2CSendByte(cmd[1])!=0;    
-    if(ack != 0)
-    {
-        return -1;
-    }  
-    
-    I2CRepeatedStart();
-       
-    sa = sa | 0x01;
-    
-    ack = I2CSendByte(sa);
-    if(ack != 0)
-    {
-        return -1;
-    } 
-        
-    I2CReadBytes((nMemAddressRead << 1), i2cData);
-              
-    I2CStop();   
 
-    for(cnt=0; cnt < nMemAddressRead; cnt++)
+    ack = I2CSendByte(sa) != 0;
+    if (ack != 0)
+    {
+        return - 1;
+    }
+
+    ack = I2CSendByte(cmd[0]) != 0;
+    if (ack != 0)
+    {
+        return - 1;
+    }
+
+    ack = I2CSendByte(cmd[1]) != 0;
+    if (ack != 0)
+    {
+        return - 1;
+    }
+
+    I2CRepeatedStart();
+
+    sa = sa | 0x01;
+
+    ack = I2CSendByte(sa);
+    if (ack != 0)
+    {
+        return - 1;
+    }
+
+    I2CReadBytes((nMemAddressRead << 1), i2cData);
+
+    I2CStop();
+
+    for (cnt = 0; cnt < nMemAddressRead; cnt ++)
     {
         i = cnt << 1;
-        *p++ = (int)i2cData[i]*256 + (int)i2cData[i+1];
-    } 
+        *p ++ = (int) i2cData[i] * 256 + (int) i2cData[i + 1];
+    }
     return 0;
-  
-} 
+
+}
 
 void MLX90640_I2CFreqSet(int freq)
 {
-    freqCnt = freq>>1;
+    freqCnt = freq >> 1;
 }
 
 int MLX90640_I2CWrite(uint8_t slaveAddr, uint16_t writeAddress, uint16_t data)
 {
     uint8_t sa;
     int ack = 0;
-    char cmd[4] = {0,0,0,0};
+    char cmd[4] = {0, 0, 0, 0};
     static uint16_t dataCheck;
 
     sa = (slaveAddr << 1);
@@ -143,105 +151,107 @@ int MLX90640_I2CWrite(uint8_t slaveAddr, uint16_t writeAddress, uint16_t data)
     ack = I2CSendByte(sa);
     if (ack != 0x00)
     {
-        return 1; 
-    }  
-    
-    for(int i = 0; i<4; i++)
+        return 1;
+    }
+
+    for (int i = 0; i < 4; i ++)
     {
         ack = I2CSendByte(cmd[i]);
-    
+
         if (ack != 0x00)
         {
-            return -1;
-        }  
-    }           
-    I2CStop();   
-    
-    MLX90640_I2CRead(slaveAddr,writeAddress,1, &dataCheck);
-    
-    if ( dataCheck != data)
+            return - 1;
+        }
+    }
+    I2CStop();
+
+    MLX90640_I2CRead(slaveAddr, writeAddress, 1, &dataCheck);
+
+    if (dataCheck != data)
     {
-        return -2;
-    }    
-    
+        return - 2;
+    }
+
     return 0;
 }
 
 int I2CSendByte(int8_t data)
 {
-   int ack = 1;
-   int8_t byte = data; 
-   
-   for(int i=0;i<8;i++)
-   {
-       Wait(freqCnt);
-       
-       if(byte & 0x80)
-       {
-           SDA_HIGH;
-       }
-       else
-       {
-           SDA_LOW;
-       }
-       Wait(freqCnt);
-       SCL_HIGH;
-       Wait(freqCnt);
-       Wait(freqCnt);
-       SCL_LOW;
-       byte = byte<<1;        
-   }    
-   
-   Wait(freqCnt);
-   ack = I2CReceiveAck();
-   
-   return ack; 
+    int ack = 1;
+    int8_t byte = data;
+
+    for (int i = 0; i < 8; i ++)
+    {
+        Wait(freqCnt);
+
+        if (byte & 0x80)
+        {
+            SDA_HIGH;
+        }
+        else
+        {
+            SDA_LOW;
+        }
+        Wait(freqCnt);
+        SCL_HIGH;
+        Wait(freqCnt);
+        Wait(freqCnt);
+        SCL_LOW;
+        byte = byte << 1;
+    }
+
+    Wait(freqCnt);
+    ack = I2CReceiveAck();
+
+    return ack;
 }
 
 void I2CReadBytes(int nBytes, char *dataP)
 {
     char data;
-    for(int j=0;j<nBytes;j++)
+    for (int j = 0; j < nBytes; j ++)
     {
         Wait(freqCnt);
-        SDA_HIGH;    
-        
+        SDA_HIGH;
+
         data = 0;
-        for(int i=0;i<8;i++){
+        for (int i = 0; i < 8; i ++)
+        {
             Wait(freqCnt);
             SCL_HIGH;
             Wait(freqCnt);
-            data = data<<1;
-            if(sda == 1){
-                data = data+1;  
+            data = data << 1;
+            if (sda == 1)
+            {
+                data = data + 1;
             }
             Wait(freqCnt);
             SCL_LOW;
             Wait(freqCnt);
-        }  
-        
-        if(j == (nBytes-1))
+        }
+
+        if (j == (nBytes - 1))
         {
             I2CSendNack();
         }
         else
-        {                  
+        {
             I2CSendACK();
         }
-            
-        *(dataP+j) = data; 
-    }    
-    
+
+        *(dataP + j) = data;
+    }
+
 }
-        
+
 void Wait(int freqCnt)
 {
     int cnt;
-    for(int i = 0;i<freqCnt;i++)
+    for (int i = 0; i < freqCnt; i ++)
     {
-        cnt = cnt++; 
-    }    
-} 
+        cnt = cnt ++;
+    }
+}
 
 void I2CStart(void)
 {
@@ -252,8 +262,8 @@ void I2CStart(void)
     SDA_LOW;
     Wait(freqCnt);
     SCL_LOW;
-    Wait(freqCnt);    
-    
+    Wait(freqCnt);
+
 }
 
 void I2CStop(void)
@@ -265,8 +275,8 @@ void I2CStop(void)
     Wait(freqCnt);
     SDA_HIGH;
     Wait(freqCnt);
-} 
- 
+}
+
 void I2CRepeatedStart(void)
 {
     SCL_LOW;
@@ -278,7 +288,7 @@ void I2CRepeatedStart(void)
     SDA_LOW;
     Wait(freqCnt);
     SCL_LOW;
-           
+
 }
 
 void I2CSendACK(void)
@@ -291,7 +301,7 @@ void I2CSendACK(void)
     SCL_LOW;
     Wait(freqCnt);
     SDA_HIGH;
-    
+
 }
 
 void I2CSendNack(void)
@@ -304,18 +314,18 @@ void I2CSendNack(void)
     SCL_LOW;
     Wait(freqCnt);
     SDA_HIGH;
-    
+
 }
 
 int I2CReceiveAck(void)
 {
     int ack;
-    
+
     SDA_HIGH;
     Wait(freqCnt);
     SCL_HIGH;
     Wait(freqCnt);
-    if(sda == 0)
+    if (sda == 0)
     {
         ack = 0;
     }
@@ -323,11 +333,10 @@ int I2CReceiveAck(void)
     {
         ack = 1;
     }
-    Wait(freqCnt);        
+    Wait(freqCnt);
     SCL_LOW;
     SDA_LOW;
-    
-    return ack;    
-}  
 
-     
+    return ack;
+}
+

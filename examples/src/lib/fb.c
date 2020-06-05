@@ -16,10 +16,10 @@
 
 #include <unistd.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <linux/fb.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
@@ -29,7 +29,7 @@ struct fb_var_screeninfo orig_vinfo;
 long int screensize = 0;
 
 // 'global' variables to store screen info
-char *fbp = 0;
+char *fbp = NULL;
 struct fb_var_screeninfo vinfo;
 struct fb_fix_screeninfo finfo;
 
@@ -40,9 +40,9 @@ void put_pixel_RGB24(int x, int y, int r, int g, int b)
     unsigned int pix_offset = x * 3 + y * finfo.line_length;
 
     // now this is about the same as 'fbp[pix_offset] = value'
-    *((char*)(fbp + pix_offset)) = b;
-    *((char*)(fbp + pix_offset + 1)) = g;
-    *((char*)(fbp + pix_offset + 2)) = r;
+    *((char *) (fbp + pix_offset)) = b;
+    *((char *) (fbp + pix_offset + 1)) = g;
+    *((char *) (fbp + pix_offset + 2)) = r;
 
 }
 
@@ -57,14 +57,14 @@ void put_pixel_RGB565(int x, int y, int r, int g, int b)
     //unsigned short c = ((r / 8) << 11) + ((g / 4) << 5) + (b / 8);
     //unsigned short c = ((r / 8) * 2048) + ((g / 4) * 32) + (b / 8);
 
-    r = (int)(((double)r) / 8.0);
-    g = (int)(((double)g) / 4.0);
-    b = (int)(((double)b) / 8.0);
+    r = (int) (((double) r) / 8.0);
+    g = (int) (((double) g) / 4.0);
+    b = (int) (((double) b) / 8.0);
 
     unsigned short c = (r << 11) | (g << 5) | b;
 
     // write 'two bytes at once'
-    *((unsigned short*)(fbp + pix_offset)) = c;
+    *((unsigned short *) (fbp + pix_offset)) = c;
 
 }
 
@@ -72,76 +72,89 @@ void put_pixel_RGB32(int x, int y, int r, int g, int b)
 {
     unsigned int pix_offset = x * 4 + y * finfo.line_length;
 
-    *((char*)(fbp + pix_offset)) = b;
-    *((char*)(fbp + pix_offset + 1)) = g;
-    *((char*)(fbp + pix_offset + 2)) = r;
+    *((char *) (fbp + pix_offset)) = b;
+    *((char *) (fbp + pix_offset + 1)) = g;
+    *((char *) (fbp + pix_offset + 2)) = r;
 }
 
-void fb_put_pixel(int x, int y, int r, int g, int b) {
-    if (x > vinfo.xres) return;
-    if (y > vinfo.yres) return;
-    if (vinfo.bits_per_pixel == 32) {
+void fb_put_pixel(int x, int y, int r, int g, int b)
+{
+    if (x > vinfo.xres)
+    { return; }
+    if (y > vinfo.yres)
+    { return; }
+    if (vinfo.bits_per_pixel == 32)
+    {
         put_pixel_RGB32(x, y, r, g, b);
     }
-    else if (vinfo.bits_per_pixel == 16) {
+    else if (vinfo.bits_per_pixel == 16)
+    {
         put_pixel_RGB565(x, y, r, g, b);
     }
-    else {
+    else
+    {
         put_pixel_RGB24(x, y, r, g, b);
     }
 }
 
-int fb_init(){
+int fb_init()
+{
     // Open the file for reading and writing
     fbfd = open("/dev/fb0", O_RDWR);
-    if (fbfd == -1) {
+    if (fbfd == - 1)
+    {
         printf("Error: cannot open framebuffer device.\n");
         return 1;
     }
     printf("The framebuffer device was opened successfully.\n");
 
     // Get variable screen information
-    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo)) {
+    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo))
+    {
         printf("Error reading variable information.\n");
         return 1;
     }
-    printf("Original %dx%d, %dbpp\n", vinfo.xres, vinfo.yres, 
-       vinfo.bits_per_pixel );
+    printf("Original %dx%d, %dbpp\n", vinfo.xres, vinfo.yres,
+           vinfo.bits_per_pixel);
 
     // Store for reset (copy vinfo to vinfo_orig)
     memcpy(&orig_vinfo, &vinfo, sizeof(struct fb_var_screeninfo));
 
     // Get fixed screen information
-    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo)) {
+    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo))
+    {
         printf("Error reading fixed information.\n");
         return 1;
     }
 
-    // map fb to user mem 
+    // map fb to user mem
     screensize = finfo.smem_len;
-    fbp = (char*)mmap(0, 
-              screensize, 
-              PROT_READ | PROT_WRITE, 
-              MAP_SHARED, 
-              fbfd, 
-              0);
+    fbp = (char *) mmap(0,
+                        screensize,
+                        PROT_READ | PROT_WRITE,
+                        MAP_SHARED,
+                        fbfd,
+                        0);
 
-    if ((int)fbp == -1) {
-        printf("Failed to mmap.\n");
+    if (MAP_FAILED == fbp)
+    {
+        printf("Failed to mmap, errno: %d.\n", errno);
         return 1;
     }
 
     return 0;
 }
 
-void fb_cleanup(){
+void fb_cleanup()
+{
     // cleanup
     // unmap fb file from memory
     munmap(fbp, screensize);
     // reset the display mode
-    if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &orig_vinfo)) {
+    if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &orig_vinfo))
+    {
         printf("Error re-setting variable information.\n");
     }
-    // close fb file    
+    // close fb file
     close(fbfd);
 }

@@ -23,6 +23,7 @@ else:
           "        (e.g., 'sudo apt install swig') or that MLX90640_wrap.c is available.\n")
     sys.exit(1)
 
+
 # Fix so that build_ext runs before build_py
 # Based on:
 #  https://stackoverflow.com/a/29551581/7938656
@@ -40,6 +41,7 @@ class sdist_ext_first(sdist):
         self.run_command("build_ext")
         return sdist.run(self)
 
+
 classifiers = ['Development Status :: 4 - Beta',
                'Operating System :: POSIX :: Linux',
                'License :: OSI Approved :: MIT License',
@@ -52,21 +54,21 @@ classifiers = ['Development Status :: 4 - Beta',
 
 _MLX90640 = Extension(
     '_MLX90640',
-    #We now require the base library to be installed, hence: no special header dirs needed!
-    #include_dirs=['../../headers'],
+    # We now require the base library to be installed, hence: no special header dirs needed!
+    # include_dirs=['../../headers'],
     sources=sources,
     swig_opts=['-threads', '-c++'],
-    #extra_link_args=['-lbcm2835']
-    #instead of using bcm2835 I2C driver all the time, use the one linked into the library
+    # extra_link_args=['-lbcm2835']
+    # instead of using bcm2835 I2C driver all the time, use the one linked into the library
     extra_link_args=['-lMLX90640_API']
 )
 
 setup(
-    name = 'MLX90640',
-    version = '0.0.2',
-    classifiers = classifiers,
-    ext_modules = [ _MLX90640 ],
-    py_modules = ["MLX90640"],
+    name='MLX90640',
+    version='0.0.2',
+    classifiers=classifiers,
+    ext_modules=[_MLX90640],
+    py_modules=["MLX90640"],
     install_requires=[],
-    cmdclass = {'build_py' : build_py_ext_first, 'sdist' : sdist_ext_first},
+    cmdclass={'build_py': build_py_ext_first, 'sdist': sdist_ext_first},
 )
