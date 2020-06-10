@@ -293,6 +293,7 @@ int MLX90640_GetRefreshRate(uint8_t slaveAddr)
     error = MLX90640_I2CRead(slaveAddr, 0x800D, 1, &controlRegister1);
     if (error != 0)
     {
+        fprintf(stderr, "[%s:%d] error: %d", __FUNCTION__, __LINE__, error);
         return error;
     }
     refreshRate = (controlRegister1 & 0x0380) >> 7;
@@ -349,6 +350,7 @@ int MLX90640_GetCurMode(uint8_t slaveAddr)
     error = MLX90640_I2CRead(slaveAddr, 0x800D, 1, &controlRegister1);
     if (error != 0)
     {
+        fprintf(stderr, "[%s:%d] error: %d", __FUNCTION__, __LINE__, error);
         return error;
     }
     modeRAM = (controlRegister1 & 0x1000) >> 12;

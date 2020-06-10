@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(mlx90640 LANGUAGES C CXX)
+project(mlx90640_api LANGUAGES C CXX)
 
 option(I2C_MODE "LINUX by default, can be also RPI" LINUX)
 
